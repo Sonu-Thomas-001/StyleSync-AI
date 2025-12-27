@@ -1,0 +1,8 @@
+{
+  "name": "StyleSync AI",
+  "description": "An AI-powered personal stylist that analyzes your clothing items and generates complete outfit visualizations for different occasions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
