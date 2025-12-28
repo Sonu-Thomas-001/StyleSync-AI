@@ -1,14 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
 import { removeBackground } from '../services/geminiService';
+import { ClothingAnalysis } from '../types';
 
 interface ImageUploaderProps {
   onImageSelected: (base64: string) => void;
   selectedImage: string | null;
   onClear: () => void;
+  analysis?: ClothingAnalysis | null;
+  isAnalyzing?: boolean;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selectedImage, onClear }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ 
+  onImageSelected, 
+  selectedImage, 
+  onClear,
+  analysis,
+  isAnalyzing
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -140,19 +149,41 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, s
           className="w-full h-full object-contain bg-stone-50"
         />
         
-        {/* Loading Overlay for BG Removal */}
-        {isRemovingBg && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
+        {/* Loading Overlay for BG Removal or Analysis */}
+        {(isRemovingBg || isAnalyzing) && (
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center">
              <div className="w-10 h-10 border-2 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-3"></div>
-             <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Removing Background...</p>
+             <p className="text-xs font-bold uppercase tracking-widest text-stone-600">
+               {isRemovingBg ? "Removing Background..." : "Analyzing Fabric & Texture..."}
+             </p>
           </div>
         )}
 
-        <div className="absolute inset-0 bg-stone-900/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3">
-          <Button variant="glass" onClick={handleRemoveBg} className="shadow-xl min-w-[170px]" disabled={isRemovingBg}>
+        {/* Analysis Tags Overlay */}
+        {!isRemovingBg && !isAnalyzing && analysis && (
+          <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2 z-10 pointer-events-none">
+            <span className="backdrop-blur-md bg-stone-900/10 text-stone-900 border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm">
+              {analysis.fabric}
+            </span>
+            <span className="backdrop-blur-md bg-stone-900/10 text-stone-900 border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm">
+              {analysis.seasonality}
+            </span>
+            <span className="backdrop-blur-md bg-stone-900/10 text-stone-900 border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm">
+              {analysis.formality}
+            </span>
+            {analysis.colors?.[0] && (
+               <span className="backdrop-blur-md bg-stone-900/10 text-stone-900 border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm">
+               {analysis.colors[0]}
+             </span>
+            )}
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-stone-900/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 z-30">
+          <Button variant="glass" onClick={handleRemoveBg} className="shadow-xl min-w-[170px]" disabled={isRemovingBg || !!isAnalyzing}>
             Remove Background
           </Button>
-          <Button variant="secondary" onClick={onClear} className="shadow-xl min-w-[170px]" disabled={isRemovingBg}>
+          <Button variant="secondary" onClick={onClear} className="shadow-xl min-w-[170px]" disabled={isRemovingBg || !!isAnalyzing}>
             Replace Item
           </Button>
         </div>

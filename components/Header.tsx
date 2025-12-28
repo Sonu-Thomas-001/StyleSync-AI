@@ -6,7 +6,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
-  const navItems = ['Home', 'Collection', 'Journal', 'About'];
+  const navItems = ['Home', 'Collection', 'Inspiration', 'Journal', 'About'];
   const [imgError, setImgError] = useState(false);
   
   return (
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
           )}
         </div>
 
-        <nav className="hidden md:flex gap-8 text-xs font-bold uppercase tracking-widest text-stone-500">
+        <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-stone-500">
           {navItems.map((item) => (
             <button 
               key={item}
@@ -65,10 +65,27 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
               {item}
             </button>
           ))}
+          
+          {/* Profile Icon / Link */}
+          <button 
+            onClick={() => onNavigate('Profile')}
+            className={`flex items-center gap-2 pl-4 border-l border-stone-200 hover:text-stone-900 transition-colors ${currentPage === 'Profile' ? 'text-stone-900' : ''}`}
+            aria-label="Your Profile"
+          >
+            <div className="w-8 h-8 rounded-full bg-stone-100 overflow-hidden border border-stone-200">
+               <img src="https://i.pravatar.cc/150?u=sarah" alt="User" className="w-full h-full object-cover opacity-80 hover:opacity-100" />
+            </div>
+          </button>
         </nav>
+        
         {/* Mobile Menu Icon */}
-        <div className="md:hidden text-stone-900 cursor-pointer hover:text-stone-600 transition-colors">
-           <span className="text-xs font-bold uppercase tracking-widest" onClick={() => onNavigate('Collection')}>Menu</span>
+        <div className="md:hidden flex items-center gap-4">
+          <button onClick={() => onNavigate('Profile')} className="w-8 h-8 rounded-full bg-stone-100 overflow-hidden">
+             <img src="https://i.pravatar.cc/150?u=sarah" alt="User" className="w-full h-full object-cover" />
+          </button>
+          <div className="text-stone-900 cursor-pointer hover:text-stone-600 transition-colors">
+             <span className="text-xs font-bold uppercase tracking-widest" onClick={() => onNavigate('Collection')}>Menu</span>
+          </div>
         </div>
       </div>
     </header>

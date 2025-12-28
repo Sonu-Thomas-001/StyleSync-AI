@@ -19,3 +19,48 @@ export const STYLE_PROMPTS: Record<Occasion, StylePrompt> = {
     userPrompt: "Create a photorealistic flat-lay image of a complete NIGHT OUT / EVENING outfit that includes the clothing item in the provided image. Pair it with statement pieces, heels or dress boots, and bold accessories (like a clutch or sparkly jewelry). The lighting can be slightly more dramatic but still a clean flat-lay. Ensure the uploaded item is the focal point."
   }
 };
+
+// New Configuration Options for Advanced Styling
+export const WEATHER_OPTIONS = [
+  'Sunny / Warm',
+  'Cold / Winter',
+  'Rainy / Overcast',
+  'Transitional / Mild',
+  'Humid / Tropical'
+];
+
+export const CONTEXT_OPTIONS = [
+  'General Daily Wear',
+  'Job Interview',
+  'Wedding Guest',
+  'First Date',
+  'Office / Corporate',
+  'Travel / Vacation',
+  'Party / Club',
+  'Weekend Brunch'
+];
+
+export const REGION_OPTIONS = [
+  'Global / Neutral',
+  'NYC Minimalist',
+  'Parisian Chic',
+  'Scandinavian Clean',
+  'Tokyo Street Style',
+  'Indian Contemporary',
+  'London Sharp'
+];
+
+export const BODY_TYPE_OPTIONS = [
+  'Standard',
+  'Petite',
+  'Tall',
+  'Curvy / Plus',
+  'Athletic'
+];
+
+export const FIT_OPTIONS = [
+  'Standard Fit',
+  'Oversized / Relaxed',
+  'Tailored / Slim',
+  'Structured / Sharp'
+];

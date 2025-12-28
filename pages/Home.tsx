@@ -2,24 +2,53 @@ import React, { useState } from 'react';
 import { ImageUploader } from '../components/ImageUploader';
 import { OutfitCard } from '../components/OutfitCard';
 import { Button } from '../components/Button';
-import { GeneratedOutfit, Occasion } from '../types';
+import { StylePreferencesForm } from '../components/StylePreferencesForm';
+import { GeneratedOutfit, Occasion, ClothingAnalysis, StylePreferences } from '../types';
 import { STYLE_PROMPTS } from '../constants';
-import { generateOutfitImage, editOutfitImage } from '../services/geminiService';
+import { generateOutfitImage, editOutfitImage, analyzeClothingItem } from '../services/geminiService';
 
 export const Home: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [outfits, setOutfits] = useState<GeneratedOutfit[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Item Analysis State
+  const [analysis, setAnalysis] = useState<ClothingAnalysis | null>(null);
+  const [isAnalyzingItem, setIsAnalyzingItem] = useState(false);
 
-  const handleImageSelected = (base64: string) => {
+  // Styling Preferences State
+  const [stylePrefs, setStylePrefs] = useState<StylePreferences>({
+    weather: '',
+    context: '',
+    region: '',
+    bodyType: '',
+    fit: '',
+    isEcoMode: false
+  });
+
+  const handleImageSelected = async (base64: string) => {
     setSelectedImage(base64);
     setOutfits([]); 
+    setAnalysis(null);
+    
+    // Trigger Analysis automatically
+    setIsAnalyzingItem(true);
+    try {
+      const result = await analyzeClothingItem(base64);
+      setAnalysis(result);
+    } catch (error) {
+      console.error("Analysis failed", error);
+    } finally {
+      setIsAnalyzingItem(false);
+    }
   };
 
   const handleClear = () => {
     setSelectedImage(null);
     setOutfits([]);
+    setAnalysis(null);
     setIsGenerating(false);
+    setIsAnalyzingItem(false);
   };
 
   const generateOutfits = async () => {
@@ -29,17 +58,44 @@ export const Home: React.FC = () => {
     
     // Initialize placeholders
     const newOutfits: GeneratedOutfit[] = [
-      { id: '1', occasion: Occasion.CASUAL, imageUrl: '', description: 'A relaxed ensemble perfect for coffee runs or casual fridays.', loading: true },
-      { id: '2', occasion: Occasion.BUSINESS, imageUrl: '', description: 'Polished and commanding. Ready for the boardroom.', loading: true },
-      { id: '3', occasion: Occasion.NIGHT_OUT, imageUrl: '', description: 'Sophisticated glamour for evening events.', loading: true },
+      { id: '1', occasion: Occasion.CASUAL, imageUrl: '', description: 'A relaxed ensemble styled for your lifestyle.', loading: true },
+      { id: '2', occasion: Occasion.BUSINESS, imageUrl: '', description: 'Polished and professional. Ready for business.', loading: true },
+      { id: '3', occasion: Occasion.NIGHT_OUT, imageUrl: '', description: 'Sophisticated glamour for the evening.', loading: true },
     ];
     setOutfits(newOutfits);
+
+    // Build Context String from Preferences
+    let contextPrompt = "";
+    if (stylePrefs.weather) contextPrompt += ` Weather condition: ${stylePrefs.weather}.`;
+    if (stylePrefs.context) contextPrompt += ` Specific Occasion/Event: ${stylePrefs.context}.`;
+    if (stylePrefs.region) contextPrompt += ` Cultural/Regional Style: ${stylePrefs.region}.`;
+    if (stylePrefs.bodyType) contextPrompt += ` Style focusing on a ${stylePrefs.bodyType} body type silhouette.`;
+    if (stylePrefs.fit) contextPrompt += ` Fit preference: ${stylePrefs.fit}.`;
+    
+    // Eco Mode Logic
+    if (stylePrefs.isEcoMode) {
+      contextPrompt += ` ETHICAL MODE ENABLED: Prioritize 'Capsule Wardrobe' aesthetics. Use timeless, high-quality basics (like denim, cotton, wool) that have high rewearability. Avoid trendy, fast-fashion looks. Focus on versatility and minimalism.`;
+    }
 
     // Create promises for parallel generation
     const promises = newOutfits.map(async (outfit) => {
       const promptData = STYLE_PROMPTS[outfit.occasion];
+      
+      // Inject analysis and preferences into the prompt
+      let enhancedPrompt = promptData.userPrompt;
+      
+      // Add Preferences Context
+      if (contextPrompt) {
+        enhancedPrompt += ` IMPORTANT STYLING CONTEXT: ${contextPrompt}`;
+      }
+
+      // Add Item Analysis
+      if (analysis) {
+        enhancedPrompt += ` The item is ${analysis.fabric}, ${analysis.pattern}, ${analysis.formality}, suitable for ${analysis.seasonality}. Use these attributes to ensure a perfect style match.`;
+      }
+
       try {
-        const imageUrl = await generateOutfitImage(selectedImage, promptData.userPrompt);
+        const imageUrl = await generateOutfitImage(selectedImage, enhancedPrompt);
         setOutfits(current => current.map(o => 
           o.id === outfit.id 
             ? { ...o, imageUrl, loading: false }
@@ -119,13 +175,23 @@ export const Home: React.FC = () => {
                 onImageSelected={handleImageSelected} 
                 selectedImage={selectedImage}
                 onClear={handleClear}
+                analysis={analysis}
+                isAnalyzing={isAnalyzingItem}
               />
               
               {selectedImage && !isGenerating && outfits.length === 0 && (
-                <div className="mt-8 flex justify-center animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                <div className="mt-6 flex flex-col gap-4 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+                  {/* Styling Preferences */}
+                  <StylePreferencesForm 
+                    preferences={stylePrefs} 
+                    onChange={setStylePrefs} 
+                    disabled={isAnalyzingItem}
+                  />
+
                   <Button 
                     onClick={generateOutfits} 
                     className="w-full text-base py-4"
+                    disabled={isAnalyzingItem}
                   >
                     Curate My Outfits
                   </Button>
